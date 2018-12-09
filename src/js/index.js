@@ -2,21 +2,34 @@ require.config({
     baseUrl: '/js/',
     paths: {
         'jquery': 'libs/jquery-3.1.1.min',
-        'betterScroll': 'libs/better-scroll'
+        'betterScroll': 'libs/better-scroll',
+        'Zepto': 'libs/zepto'
     }
 })
 
 require(['jquery', 'betterScroll'], function($, BScroll) {
-    $.ajax({
-        url: '/users',
-        dataType: 'json',
-        success: function(data) {
-            // console.log(data);
-            if (data.code == 1) {
-                render(data.data);
+    var pagenum = 1;
+    var num = 4;
+
+    function getUserlist() {
+        $.ajax({
+            url: '/users',
+            dataType: 'json',
+            data: {
+                pagenum: pagenum,
+                num: num
+            },
+            success: function(data) {
+                console.log(data.data);
+                if (data.code == 1 && pagenum <= data.total) {
+                    pagenum++;
+                    render(data.data);
+                }
             }
-        }
-    })
+        })
+    }
+    getUserlist();
+
 
     function render(data) {
         var str = '';
@@ -33,8 +46,18 @@ require(['jquery', 'betterScroll'], function($, BScroll) {
                 </dl>`
         });
         con.innerHTML += str;
-        new BScroll('#content', {
+        var t = new BScroll('#content', {
             probeType: 2
         })
+
+        t.on('scroll', function() {
+            if (this.y < this.maxScrollY - 30) {
+                getUserlist();
+            }
+        })
+
     }
+
+
+
 })
